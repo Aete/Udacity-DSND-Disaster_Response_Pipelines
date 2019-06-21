@@ -26,11 +26,11 @@ def tokenize(text):
     return clean_tokens
 
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+df = pd.read_sql_table('disaster_response', engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/pipeline_final_model.pickle")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -39,14 +39,54 @@ model = joblib.load("../models/your_model_name.pkl")
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
+    categories = df.columns[4:]
+    categories_top10 = df[categories].sum(axis=0).sort_values(ascending=False).index[:10] 
+    df_top10_counts_direct = df[df['genre']=='direct'][categories_top10].sum(axis=0).sort_values(ascending=False).values[:10] 
+    df_top10_counts_news = df[df['genre']=='news'][categories_top10].sum(axis=0).sort_values(ascending=False).values[:10] 
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
-    graphs = [
-        {
+    graph_1 = {
+            'data': [
+                Bar(
+                    x=categories_top10,
+                    y=df_top10_counts_direct,
+                    text=["{:,}".format(x) for x in df_top10_counts_direct],
+                    textposition = "outside",
+                    hoverinfo = 'text',
+                    textfont = dict(family='Arial, sans-serif', size=12,color='black'),
+                    marker=dict(color='rgb(244,67,54)')
+                ),
+                Bar(
+                    x=categories_top10,
+                    y=df_top10_counts_news,
+                    text=["{:,}".format(x) for x in df_top10_counts_news],
+                    textposition = "outside",
+                    textfont = dict(family='Arial, sans-serif', size=12,color='black'),
+                    marker=dict(color='rgb(33,150,243)')
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Disaster Categories (Top 10)',
+                'titlefont':dict(family='Arial, sans-serif', size=18,color='black') ,
+                'height':600,
+                'yaxis': {
+                    'tickfont': dict(family='Arial, sans-serif', size=14,color='black'),
+                    'showgrid' : True,
+                    'dtick':2000,
+                    'range':[0, 12000]
+                },
+                'xaxis': {
+                    'tickangle' : 0,
+                    'tickfont': dict(family='Arial, sans-serif', size=14,color='black')
+                }
+            }
+        }
+    
+    graph_2 = {
             'data': [
                 Bar(
                     x=genre_names,
@@ -64,7 +104,8 @@ def index():
                 }
             }
         }
-    ]
+    
+    graphs = [graph_1,graph_2]
     
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
@@ -93,8 +134,7 @@ def go():
 
 
 def main():
-    app.run(host='0.0.0.0', port=3001, debug=True)
-
+    app.run(host=app.config.get("HOST", "localhost"),port=app.config.get("PORT", 9000))
 
 if __name__ == '__main__':
     main()
