@@ -1,16 +1,34 @@
 import sys
-
+import numpy as np
+import pandas as pd
 
 def load_data(messages_filepath, categories_filepath):
-    pass
-
+    messages = pd.read_csv(messages_filepath)
+    categories = pd.read_csv(categories_filepath,sep=',')
+    df = messages.merge(categories,on='id')
+    return df
 
 def clean_data(df):
-    pass
+    categories=df['categories'].str.split(';',expand=True)
+    row = categories.iloc[0]
+    category_colnames = [x[:-2] for x in row]
+    categories.columns = category_colnames
+    for column in categories:
+        # set each value to be the last character of the string
+        categories[column] = categories[column].str[-1]
 
-
+        # convert column from string to numeric
+        categories[column] = categories[column].astype('int')
+    categories['related'] = categories['related'].replace(2,0)
+    categories=categories.drop('child_alone',axis=1)
+    df = df.drop('categories',axis=1)
+    df = pd.concat([df,categories],axis=1)
+    dupulicated_index_list = df[df.duplicated()].index.tolist()
+    df = df.drop(dupulicated_index_list,axis=0)
+    
 def save_data(df, database_filename):
-    pass  
+    engine = create_engine('sqlite:///'+database_filename)
+    df.to_sql('disaster_response', engine, index=False)  
 
 
 def main():
