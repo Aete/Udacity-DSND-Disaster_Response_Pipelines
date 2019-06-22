@@ -35,17 +35,21 @@ def load_data(database_filepath):
     category_name_list = df.columns[4:].tolist()
     return X, Y, category_name_list
 
-
 def tokenize(text):
     # normalize text and strip punctuation
-    text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
+    text = text.strip()
+    text = re.sub(r"[^a-zA-Z]", " ", text.lower())
     
+    # replace url to urlplaceholder
+    detected_urls = re.findall(url_regex, text)
+    for url in detected_urls:
+        text = text.replace(url, "urlplaceholder")
+        
     # tokenize text
     token_list = word_tokenize(text) 
-    token_list = [w for w in token_list if w not in stopwords.words("english")]
     
     # lemmatize and return token list
-    token_list = [WordNetLemmatizer().lemmatize(w) for w in token_list]
+    token_list = [WordNetLemmatizer().lemmatize(w) for w in token_list if w not in stopwords.words("english")]
     return token_list
 
 

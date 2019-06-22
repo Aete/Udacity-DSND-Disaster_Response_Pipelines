@@ -8,6 +8,7 @@ from nltk.tokenize import word_tokenize
 from flask import Flask
 from flask import render_template, request, jsonify
 from plotly.graph_objs import Bar
+from plotly.graph_objs import Pie
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
 
@@ -51,6 +52,7 @@ def index():
     graph_1 = {
             'data': [
                 Bar(
+                    name='Direct',
                     x=categories_top10,
                     y=df_top10_counts_direct,
                     text=["{:,}".format(x) for x in df_top10_counts_direct],
@@ -60,6 +62,7 @@ def index():
                     marker=dict(color='rgb(244,67,54)')
                 ),
                 Bar(
+                    name='News',
                     x=categories_top10,
                     y=df_top10_counts_news,
                     text=["{:,}".format(x) for x in df_top10_counts_news],
@@ -88,6 +91,20 @@ def index():
     
     graph_2 = {
             'data': [
+                Pie(
+                    labels=genre_names,
+                    values=genre_counts
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Message Genres (Pie chart)',
+                'titlefont':dict(family='Arial, sans-serif', size=18,color='black') 
+ 
+            }
+        }
+    graph_3 = {
+            'data': [
                 Bar(
                     x=genre_names,
                     y=genre_counts
@@ -95,7 +112,8 @@ def index():
             ],
 
             'layout': {
-                'title': 'Distribution of Message Genres',
+                'title': 'Distribution of Message Genres(Bar chart)',
+                'titlefont':dict(family='Arial, sans-serif', size=18,color='black') ,
                 'yaxis': {
                     'title': "Count"
                 },
@@ -105,7 +123,7 @@ def index():
             }
         }
     
-    graphs = [graph_1,graph_2]
+    graphs = [graph_2,graph_3,graph_1]
     
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
