@@ -4,12 +4,34 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
+        
+    '''
+    Function for load database from sql file. It divides database to two different sets (X and Y).
+    
+    Args:
+        messages_filepath (string): filepath of message data
+        categories_filepath (string): filepath of disaster categories data
+    
+    Returns:
+        df (pandas.DataFrame): merged dataframe from massages and categories data
+    '''
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath,sep=',')
     df = messages.merge(categories,on='id')
     return df
 
 def clean_data(df):
+            
+    '''
+    Function for cleaning database. 
+    
+    Args:
+        df (pandas.DataFrame): target dataframe
+    
+    Returns:
+        df (pandas.DataFrame): cleaned dataframe
+    '''
+    
     categories=df['categories'].str.split(';',expand=True)
     row = categories.iloc[0]
     category_colnames = [x[:-2] for x in row]
@@ -25,12 +47,21 @@ def clean_data(df):
     df = df.drop('categories',axis=1)
     df = pd.concat([df,categories],axis=1)
     dupulicated_index_list = df[df.duplicated()].index.tolist()
+    assert len(df[df.duplicated()]) == 0
     df = df.drop(dupulicated_index_list,axis=0)
     return df
     
 def save_data(df, database_filename):
+    '''
+    Function that saves a cleaned database.
+    
+    Args:
+        df (pandas.DataFrame): target dataframe to save
+        database_filename (string): filename of database
+        
+    '''
     engine = create_engine('sqlite:///'+ database_filename)
-    df.to_sql('disaster_response', engine, index=False)  
+    df.to_sql('disaster_response', engine, index=False, if_exists='replace')  
 
 
 def main():

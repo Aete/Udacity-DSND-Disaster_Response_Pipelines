@@ -28,6 +28,21 @@ from sqlalchemy import create_engine
 
 
 def load_data(database_filepath):
+    
+    '''
+    Function for load database from sql file. It divides database to two different sets (X and Y).
+    
+    Args:
+        database_filepath (string): filepath of target database
+    
+    Returns:
+        X (pandas.DataFrame): dataframe for train pipeline (features)
+        Y (pandas.DataFrame): dataframe for train pipeline (target)
+        category_name_list (list): list of disaster categories
+    '''
+    
+    
+    
     engine = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql('SELECT * FROM disaster_response', engine)
     X = df['message']
@@ -36,6 +51,19 @@ def load_data(database_filepath):
     return X, Y, category_name_list
 
 def tokenize(text):
+        
+    '''
+    Function for tokenizing text. Through the function, punctuations and url will removed from the text.
+    Then, text will be tokenized as list
+    
+    Args:
+        text (string): target text to tokenize
+    
+    Returns:
+        token_list (list): list of words from tokenized text
+    
+    '''
+    
     # normalize text and strip punctuation
     text = text.strip()
     text = re.sub(r"[^a-zA-Z]", " ", text.lower())
@@ -55,6 +83,19 @@ def tokenize(text):
 
 
 def build_model():
+    
+    '''
+    Function for making new pipeline with different an estimator. It optimizes pipeline with gridsearchCV and returns optimized pipeline
+    
+    Args:
+        vect: (Scikit-learn) CountVectorizer
+        tfidf: (Scikit-learn) TfidfTransformer
+    
+    Returns:
+        pipeline (Pipeline): pipeline which is consisted with CountVectorizer, TfidfTransformer, TfidfVectorizer, TruncatedSVD
+                             and MultiOutputClassifier with LGBMClassifier.
+    
+    '''
     pipeline = Pipeline([('features',FeatureUnion(
                       [('text_pipeline1', Pipeline([
                                           ('vect', CountVectorizer(tokenizer=tokenize, ngram_range = (1,2), max_df = 0.75)),
@@ -69,10 +110,34 @@ def build_model():
                                                                              gpu_platform_id = 0, gpu_device_id = 0)))
                     ])
     
+    parameters_grid =  {
+        'vect__ngram_range': [(1, 2)],
+        'vect__max_df': (0.75, 1.0),
+        'Multi_classifier__estimator__boosting_type' : ['dart'],
+        'Multi_classifier__estimator__learning_rate' : (0.08,0.1)
+        }
+
+
+    grid_cv = GridSearchCV(pipeline, parameters_grid, cv = 3,  verbose = 20, n_jobs=-1)
+    grid_cv.fit(X_train,y_train) 
+    pipeline = grid_cv.best_estimator_
+    
     return pipeline
 
 
-def evaluate_model(model, X_test, Y_test, category_names):
+def evaluate_model(model, X_test, Y_test, category_name_list):
+    '''
+    Function evaluate pipeline with predicted y value from pipeline 
+    It shows classification_report by each category.
+    
+    Args:
+        model (pipeline): machine learning pipeline
+        X_test (pandas.DataFrame): dataframe of features to test
+        Y_test (pandas.DataFrame): dataframe of target to test
+        category_name_list (list): list of disaster categories
+    
+    '''
+    
     Y_pred = model.predict(X_test)
     for i,col in enumerate(category_names):
         print(col)
@@ -80,6 +145,15 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
+    '''
+    Function that saves a pipeline as pickle file.
+    
+    Args:
+        model_name: name(version) of the pipeline
+        pipeline: target pipeline to save
+        
+    '''
+    
     url = model_filepath
     f = bz2.BZ2File(url, 'wb')
     pickle.dump(model, f, protocol=2)
