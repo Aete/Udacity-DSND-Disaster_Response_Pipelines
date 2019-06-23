@@ -75,4 +75,8 @@ Set the workspace as
 
 `Udacity-DSND-Disaster_Response_Pipelines/app`
 
+run code below and open localhost:9000
+
 `python run.py`
+
+
