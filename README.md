@@ -34,3 +34,45 @@ For the machine learning portion, this notebook split the data into a training s
 Then, this will build a machine learning pipeline that uses NLTK, as well as scikit-learn's Pipeline and GridSearchCV to output
 a final model that uses the message column to predict classifications for 36 categories (multi-output classification).
 Finally, this will export your model to a pickle file. 
+
+
+## How to Run
+
+### Requirement
+
+1. python: 3.5+
+2. Data Science Library : pandas, sqlalchemy, numpy, scikit-learn, lightgbm (gpu), NLTK, plotly
+3. Web App Library : flask
+
+### 1. Install
+Clone this repository
+
+`git clone https://github.com/Aete/Udacity-DSND-Disaster_Response_Pipelines`
+
+### 2. Load and Clean Database
+
+Set the workspace as 
+
+`Udacity-DSND-Disaster_Response_Pipelines/data`
+
+and run code below
+
+`python process_data.py disaster_messages.csv disaster_categories.csv DisasterResponse.db`
+
+### 3. Build and Train a Pipeline
+
+Set the workspace as 
+
+`Udacity-DSND-Disaster_Response_Pipelines/models`
+
+and run code below
+
+`python train_classifier.py ../data/DisasterResponse.db classifier.pkl`
+
+### 4. Run a Web App
+
+Set the workspace as 
+
+`Udacity-DSND-Disaster_Response_Pipelines/app`
+
+`python run.py`
