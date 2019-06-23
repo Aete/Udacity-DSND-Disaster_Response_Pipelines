@@ -2,6 +2,7 @@ import json
 import plotly
 import pandas as pd
 
+import re
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 
@@ -15,10 +16,43 @@ from sqlalchemy import create_engine
 
 app = Flask(__name__)
 
+def tokenize(text):
+        
+    '''
+    Function for tokenizing text. Through the function, punctuations and url will removed from the text.
+    Then, text will be tokenized as list
+    
+    Args:
+        text (string): target text to tokenize
+    
+    Returns:
+        token_list (list): list of words from tokenized text
+    
+    '''
+    
+    # normalize text and strip punctuation
+    text = text.strip()
+    text = re.sub(r"[^a-zA-Z]", " ", text.lower())
+    
+    # replace url to urlplaceholder
+    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    detected_urls = re.findall(url_regex, text)
+    for url in detected_urls:
+        text = text.replace(url, "urlplaceholder")
+        
+    # tokenize text
+    token_list = word_tokenize(text) 
+    
+    # lemmatize and return token list
+    token_list = [WordNetLemmatizer().lemmatize(w) for w in token_list]
+    return token_list
+
 # load data
 engine = create_engine('sqlite:///../data/DisasterResponse.db')
 df = pd.read_sql_table('disaster_response', engine)
 
+# load model
+model = joblib.load("../models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
