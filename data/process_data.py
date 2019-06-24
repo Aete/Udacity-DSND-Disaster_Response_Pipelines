@@ -47,7 +47,6 @@ def clean_data(df):
     df = df.drop('categories',axis=1)
     df = pd.concat([df,categories],axis=1)
     dupulicated_index_list = df[df.duplicated()].index.tolist()
-    assert len(df[df.duplicated()]) == 0
     df = df.drop(dupulicated_index_list,axis=0)
     return df
     

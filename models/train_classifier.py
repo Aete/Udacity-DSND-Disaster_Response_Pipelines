@@ -111,18 +111,16 @@ def build_model():
                     ])
     
     parameters_grid =  {
-        'vect__ngram_range': [(1, 2)],
-        'vect__max_df': (0.75, 1.0),
+        'features__text_pipeline1__vect__ngram_range': [(1, 2)],
+        'features__text_pipeline1__vect__max_df': (0.75, 1.0),
         'Multi_classifier__estimator__boosting_type' : ['dart'],
         'Multi_classifier__estimator__learning_rate' : (0.08,0.1)
         }
 
 
-    grid_cv = GridSearchCV(pipeline, parameters_grid, cv = 3,  verbose = 20, n_jobs=-1)
-    grid_cv.fit(X_train,y_train) 
-    pipeline = grid_cv.best_estimator_
-    
-    return pipeline
+    grid_cv = GridSearchCV(pipeline, parameters_grid, cv = 3,  verbose = 20)
+   
+    return grid_cv
 
 
 def evaluate_model(model, X_test, Y_test, category_name_list):
@@ -139,7 +137,7 @@ def evaluate_model(model, X_test, Y_test, category_name_list):
     '''
     
     Y_pred = model.predict(X_test)
-    for i,col in enumerate(category_names):
+    for i,col in enumerate(category_name_list):
         print(col)
         print(classification_report(Y_test[col].values, Y_pred[:,i]))
 
@@ -172,12 +170,12 @@ def main():
         
         print('Training model...')
         model.fit(X_train, Y_train)
-        
+        model_optimized = model.best_estimator_
         print('Evaluating model...')
-        evaluate_model(model, X_test, Y_test, category_names)
+        evaluate_model(model_optimized, X_test, Y_test, category_names)
 
         print('Saving model...\n    MODEL: {}'.format(model_filepath))
-        save_model(model, model_filepath)
+        save_model(model_optimized, model_filepath)
 
         print('Trained model saved!')
 
